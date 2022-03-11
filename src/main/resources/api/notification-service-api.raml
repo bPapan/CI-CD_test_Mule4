@@ -1,0 +1,64 @@
+#%RAML 1.0
+title: Notification Service API
+version: 1.0
+
+traits:
+  client-id-required:
+    headers:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+    responses:
+      401:
+        description: Unauthorized, The client_id or client_secret are not valid or the client does not have access.
+      429:
+        description: The client used all of its request quota for the current period.
+      500:
+        description: An error occurred, see the specific message (Only if it is a WSDL endpoint).
+      503:
+        description: Contracts Information Unreachable.
+
+
+/notification:
+  is: [client-id-required]
+  get:
+    displayName: Notification
+    description: API for sending notification via email and/or sms
+    queryParameters:
+      mail_to: 
+        displayName: Mail to
+        description: Mail address of the receiver
+        type: string
+        required: false
+      sms_to: 
+        displayName: SMS to
+        description: Contact no. of the receiver
+        type: string
+        required: false
+      method:
+        displayName: Notification method
+        required: false
+        enum: 
+          - email
+          - sms
+      name:
+        displayName: Receiver name
+        type: string
+        required: false
+      device:
+        displayName: Device name
+        type: string
+        required: true
+      state:
+        displayName: Device state
+        required: true
+        enum:
+          - ON
+          - OFF
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              message: Notification sent.

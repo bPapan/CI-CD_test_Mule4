@@ -1,0 +1,83 @@
+%dw 2.0
+
+type auto_1d62f054_de47_42ed_9531_f4d480b108eb_Output_Payload = {|
+  "0": org_mule_runtime_api_message_Message, 
+  "1": org_mule_runtime_api_message_Message_22
+|}
+type org_mule_runtime_api_message_Message_22 = {|
+  payload: {
+    error_message?: String, 
+    subresource_uris?: { _?: Any }, 
+    date_sent?: String, 
+    date_updated?: String, 
+    date_created?: String, 
+    api_version?: String, 
+    body?: String, 
+    num_segments?: String, 
+    uri?: String, 
+    num_media?: String, 
+    sid?: String, 
+    price_unit?: String, 
+    messaging_service_sid?: String, 
+    price?: String, 
+    account_sid?: String, 
+    error_code?: Number, 
+    from?: String, 
+    to?: String, 
+    direction?: "outbound-reply", 
+    status?: "sending", 
+    _?: Any
+  }, 
+  attributes: com_mulesoft_connectivity_twilioconnector_rest_commons_api_operation_HttpResponseAttributes
+|} {"typeId": "org.mule.runtime.api.message.Message"}
+type com_mulesoft_connectivity_twilioconnector_rest_commons_api_operation_HttpResponseAttributes = {|
+  statusCode: Number, 
+  headers: { _?: String }, 
+  reasonPhrase: String
+|} {"typeAlias": "HttpResponseAttributes",
+"typeId": "com.mulesoft.connectivity.twilioconnector.rest.commons.api.operation.HttpResponseAttributes"}
+
+
+
+
+type org_mule_runtime_api_message_Message = {|
+  payload: Any, 
+  attributes: org_mule_extension_http_api_HttpRequestAttributes
+|} {"typeId": "org.mule.runtime.api.message.Message"}
+type org_mule_extension_http_api_HttpRequestAttributes = {|
+  listenerPath: String, 
+  rawRequestPath: String, 
+  relativePath: String, 
+  maskedRequestPath: String, 
+  version: String, 
+  scheme: String, 
+  method: String, 
+  requestUri: String, 
+  rawRequestUri: String, 
+  queryString: String, 
+  localAddress: String, 
+  remoteAddress: String, 
+  clientCertificate?: java_security_cert_Certificate, 
+  queryParams: { _?: String }, 
+  uriParams: { _?: String }, 
+  requestPath: String, 
+  headers: { _?: String }
+|} {"typeAlias": "HttpRequestAttributes",
+"typeId": "org.mule.extension.http.api.HttpRequestAttributes"}
+type java_security_cert_Certificate = {|
+  encoded?: Binary, 
+  publicKey?: java_security_PublicKey, 
+  "type"?: String
+|} {"typeAlias": "Certificate",
+"typeId": "java.security.cert.Certificate"}
+type java_security_PublicKey = {|  |} {"typeAlias": "PublicKey",
+"typeId": "java.security.PublicKey"}
+
+
+
+
+
+
+
+
+
