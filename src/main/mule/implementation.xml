@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:twilio="http://www.mulesoft.org/schema/mule/twilio" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/twilio http://www.mulesoft.org/schema/mule/twilio/current/mule-twilio.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="postNotification" doc:id="c123f46f-f9b8-4c14-a7cf-06cc73188f5a" >
+		<flow-ref doc:name="setChoice" doc:id="d3be0d00-c6d3-4259-b34d-c180fa266df7" name="setChoice"/>
+		<validation:is-true doc:name="Is true" doc:id="65b3e714-fa0c-4a3a-a807-50e74c459488" expression="#[['sms','email',''] contains vars.choice]" message="#['Invalid choice' ++ ' ' ++ (vars.choice default' ')]"/>
+		<set-variable value="#[message.attributes.queryParams.name as String default '']" doc:name="Set Variable" doc:id="b276311b-eba2-4087-8c3a-4d41ac0daa5f" variableName="Name" />
+		<set-variable value="#[message.attributes.queryParams.device as String default '']" doc:name="Set Variable" doc:id="848ab04d-d7f5-44da-9e59-021c756688d3" variableName="Device" />
+		<set-variable value="#[message.attributes.queryParams.state as String default '']" doc:name="Set Variable" doc:id="1209b198-299d-4de1-a33b-ce41f4d9b4e9" variableName="state" />
+		<choice doc:name="Choice" doc:id="fb53af84-c5fc-4678-b480-a6a4ea4576ff" >
+			<when expression="#[vars.choice == 'sms']">
+				<validation:is-not-blank-string doc:name="Is not blank string" doc:id="1e2bc15f-90b0-4ef8-a8bb-3ae80719b2e9" value="#[message.attributes.queryParams.sms_to]" message='Provide the receiver contact no. in query parameter: "sms_to"' />
+				<ee:transform doc:name="Transform Message" doc:id="b87bf8ea-b404-4d57-84ee-1ea45f01bc86">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+message.attributes.queryParams.sms_to as String splitBy ","]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parallel-foreach doc:name="Parallel For Each" doc:id="9ba4cf64-b86b-4fa6-bcc6-e919153c15b2" collection="#[payload]">
+					<validation:matches-regex doc:name="Matches regex" doc:id="80ce18fa-78c8-46db-b539-598303d95670" value="#[payload]" regex="^(\+\d{1,3}[- ]?)?\d{10}$" message='Please provide a valid contact no. in query parameter: "sms_to"' />
+					<set-variable value="#[payload]" doc:name="Set Variable" doc:id="1b285064-4ebe-4704-b37c-af6327eec0c8" variableName="contact_no"/>
+					<flow-ref doc:name="sendSMS" doc:id="6050652a-5bf1-402f-bef2-b8947719216b" name="sendSMS" />
+				</parallel-foreach>
+			</when>
+			<when expression="#[vars.choice == 'email']">
+				<validation:is-not-blank-string doc:name="Is not blank string" doc:id="886cd732-0d9c-4002-909b-8446396f2671" value="#[message.attributes.queryParams.mail_to]" message='Please provide an email address in query parameter: "mail_to"'/>
+				<ee:transform doc:name="Transform Message" doc:id="f0f113a9-3727-4ecf-97c1-64215901b412">
+					<ee:message>
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+message.attributes.queryParams.mail_to as String splitBy ","]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parallel-foreach doc:name="Parallel For Each" doc:id="9ab841ed-732b-4d66-a5e3-8a15a2bb13d4">
+					<validation:is-email doc:name="Is email" doc:id="0585ef6a-6497-46ba-bc84-0a94e598370d" message='The email address provided in query parameter "mail_to" is invalid.' email="#[payload]"/>
+					<set-variable doc:name="Set Variable" doc:id="7ff4f2da-5b65-4111-b2f6-63f6120b188e" variableName="email_address" value="#[payload]" />
+					<flow-ref doc:name="sendEmail" doc:id="44f42834-3fa3-490e-9b7d-ac3a270eedde" name="sendEmail" />
+				</parallel-foreach>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="sendAllNotifications" doc:id="0e59579c-978b-42ea-bd21-56c92fc2e159" name="sendAllNotifications"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="52de4c24-cec8-4d43-8a5c-b0c6906e4633" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload..payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5bc2fdcd-234b-4f5a-85bc-ed812208d0e0" />
+	</flow>
+	<sub-flow name="setChoice" doc:id="23eda020-2103-4064-9c7d-3ed8c0aa199c" >
+		<set-variable value="#[message.attributes.queryParams.method default '']" doc:name="choice" doc:id="04f0f2c1-516b-408a-86ec-6d4114787dbc" variableName="choice"/>
+	</sub-flow>
+	<flow name="sendAllNotifications" doc:id="1d62f054-de47-42ed-9531-f4d480b108eb" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="2e20d6b3-b96e-4856-a3a7-41b295f84809" >
+			<route >
+				<validation:is-not-blank-string doc:name="Is not blank string" doc:id="3c678275-46f6-4895-994a-53376a6cd869" value="#[message.attributes.queryParams.mail_to]" message='Please provide an email address in query parameter: "mail_to"' />
+				<ee:transform doc:name="Transform Query Parameter containing email_addresses to list" doc:id="334e61eb-f7da-4618-9079-16508bcb4aa6">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+message.attributes.queryParams.mail_to as String splitBy ","]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parallel-foreach doc:name="Parallel For Each" doc:id="9e5766fa-c7e6-4236-a5ea-4166be949061" >
+					<validation:is-email doc:name="Is email" doc:id="31771767-a4d3-464a-9d78-63ec860935d7" email="#[payload]" message='The email address provided in query parameter "mail_to" is invalid.' />
+					<set-variable value="#[payload]" doc:name="Set Variable" doc:id="23f065b8-9dc7-4017-b718-1fbf15d0c9fc" variableName="email_address" />
+					<flow-ref doc:name="sendEmail" doc:id="b3ba2dea-de36-4481-a2f2-d0bebb19d080" name="sendEmail" />
+				</parallel-foreach>
+			</route>
+			<route >
+				<validation:is-not-blank-string doc:name="Is not blank string" doc:id="012028ed-bfd3-40d2-badf-14881475d812" value="#[message.attributes.queryParams.sms_to]" message='Provide the receiver contact no. in query parameter: "sms_to"' />
+				<ee:transform doc:name="Transform Query Parameter containing sms_numbers to list" doc:id="ec99a104-1380-41c0-a64b-e47485fac18d">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+message.attributes.queryParams.sms_to as String splitBy ","]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parallel-foreach doc:name="Parallel For Each" doc:id="92fc5808-355c-4011-97c0-f160865ccf6d" >
+					<validation:matches-regex doc:name="Matches regex" doc:id="676b7352-99d6-48e4-877d-63ff962b5052" value="#[payload]" regex="^(\+\d{1,3}[- ]?)?\d{10}$" message='Please provide a valid contact no. in query parameter: "sms_to"' />
+					<set-variable value="#[payload]" doc:name="Set Variable" doc:id="1c8c20f7-801e-406c-85b4-6257d48b50cb" variableName="contact_no" />
+					<flow-ref doc:name="sendSMS" doc:id="d874a92a-4abd-484d-b1cc-cfaf96b56c84" name="sendSMS" />
+				</parallel-foreach>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="a2d85b80-bca4-46a7-9291-c4138761abaa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+//{
+//	"0": {
+//		payload: payload."0".payload
+//	},
+//	"1": {
+//		payload: {
+//			date_created: payload."1".payload.date_created,
+//			body: payload."1".payload.body,
+//			from: payload."1".payload.from,
+//			to: payload."1".payload.to
+//		}
+//	}
+//}
+payload..payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="fe4b8c8a-0034-4893-bc7a-104980f60a1f" />
+	</flow>
+	<flow name="sendSMS" doc:id="8bc4ed15-e556-437e-bfbf-c6f2f1c9e911" >
+		<ee:transform doc:name="Transform Message" doc:id="02ad924c-4f50-4473-9aea-897452cdbd60" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"To": vars.contact_no,
+	"From": p('sms.twilio_sender_number'),
+    "Device": vars.device,
+    "State": vars.state
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="aad0c17b-4143-4cde-9be6-d9d2b99be476" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+{
+	"To": (payload.To default "" as String),
+	"From": (payload.From default ""  as String),
+	"Body": 'The ' ++ (payload.Device default ""  as String) ++ ' device has been turned ' ++ (payload.State default ""  as String)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<twilio:create20100401-accounts-messagesjson-by-account-sid doc:name="Create Message" doc:id="11720a8a-e677-45e6-995d-b1b8e06e5b8f" config-ref="Twilio_Connector_Config" accountSid="#[p('sms.twilio_sid')]">
+			<twilio:accounts-messages-content ><![CDATA[#[output application/x-www-form-urlencoded
+---
+payload]]]></twilio:accounts-messages-content>
+		</twilio:create20100401-accounts-messagesjson-by-account-sid>
+		<ee:transform doc:name="Transform Message" doc:id="4548cea3-cbb1-415e-8c38-8bb7a40d774d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	date_sent: payload.date_sent,
+	body: payload.body,
+	from: payload.from,
+	to: payload.to
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1e8a3690-4da4-4cac-ba7b-05eecfb98bbc" />
+	</flow>
+	<flow name="sendEmail" doc:id="62f94942-c651-4052-8b6f-871ce8a814f2" >
+		<ee:transform doc:name="Transform Message" doc:id="64691f65-241b-4d0a-a6cb-e2b6435b0aae" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Name": vars.name,
+	"Device": vars.device,
+	"State": vars.state
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<email:send doc:name="Send" doc:id="15deff47-0a10-4de8-9c77-c2d043f4e5c3" config-ref="Email_SMTP" subject="Device status changed" fromAddress="#[p('email.smtp_user')]">
+			<email:to-addresses >
+				<email:to-address value="#[vars.email_address]" />
+			</email:to-addresses>
+			<email:body contentType="text/html">
+				<email:content ><![CDATA[#[%dw 2.0
+output application/java
+---
+"<p>Hi " ++ (payload.Name default '') ++ ", </p><br><p>The " ++ (payload.Device default '') ++ " has been turned " ++ (payload.State default '') ++ ".</p>"]]]></email:content>
+			</email:body>
+		</email:send>
+		<logger level="INFO" doc:name="Logger" doc:id="5a8460a4-75af-4720-b7dc-4c503d61ef77" />
+	</flow>
+</mule>

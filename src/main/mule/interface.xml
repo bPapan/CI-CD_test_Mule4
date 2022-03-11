@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+    <apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="0a671ef3-d84a-42bc-859f-72dd68a0b306" name="notification-service-api-config" api="notification-service-api.raml" />
+    <flow name="notification-service-api-main" doc:id="6195aa57-73a6-43b1-8a70-f10a4519551b">
+        <http:listener doc:name="Listener" doc:id="19a61ad5-4d55-4713-8cbe-c47fda1feaa4" config-ref="HTTP_Listener_config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeadersMapName default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeadersMapName default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router doc:name="APIkit Router" doc:id="3fb93c1b-b4da-4810-a7f0-9b347242d423" config-ref="notification-service-api-config" />
+    </flow>
+    <flow name="notification-service-api-console" doc:id="0371c4a0-a965-4222-ad1f-73b0b86fc345">
+        <http:listener doc:name="Listener" doc:id="436db649-33ce-482a-80d4-07fd8ae05e58" config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeadersMapName default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeadersMapName default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console doc:name="APIkit Console" doc:id="8c7ee222-f3f1-48d6-aa03-e73508869132" config-ref="notification-service-api-config" />
+    </flow>
+    <flow name="get:\notification:notification-service-api-config" doc:id="e8975b09-03af-4f2f-8a1d-d54d47384180">
+        <flow-ref doc:name="postNotification" doc:id="7b34ae1e-3864-4d26-9395-44b2f7fd7814" name="postNotification" />
+    </flow>
+</mule>

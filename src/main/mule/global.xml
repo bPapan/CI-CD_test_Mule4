@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:twilio="http://www.mulesoft.org/schema/mule/twilio"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/twilio http://www.mulesoft.org/schema/mule/twilio/current/mule-twilio.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="251853bc-fb70-4586-858d-7e935ba92676" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<twilio:config name="Twilio_Connector_Config" doc:name="Twilio Connector Config" doc:id="f9912ec5-3477-45ae-809a-6837270df0ac" >
+		<twilio:account-sid-auth-token-connection username='${sms.twilio_sid}' password='${secure::sms.twilio_auth_token}' />
+	</twilio:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="834f49cb-a87e-4603-9904-e8efcf30a0fb" >
+		<email:smtp-connection host='${email.smtp_host}' password="${secure::email.smtp_password}" user='${email.smtp_user}' port="${email.smtp_port}">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="a78c288e-f219-4c99-af40-7c6434cdedee" file="mule.local.properties" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="412ae681-c750-4139-86e5-eb3cb0c86670" file="mule.local.properties" key="${mule.properties.key}"/>
+	<global-property doc:name="Global Property" doc:id="ef40a9d8-8fb8-4d6c-968b-bebfc43d4968" name="mule.properties.key" value="DEV3212021X789YZ" />
+</mule>
