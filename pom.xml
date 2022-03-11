@@ -8,6 +8,7 @@
 	<packaging>mule-application</packaging>
 
 	<name>notification-service-test</name>
+	<!--Just a comment to test the pipeline again-->
 
 	<description>Template of sending notification via sms and email to user</description>
 	<properties>
